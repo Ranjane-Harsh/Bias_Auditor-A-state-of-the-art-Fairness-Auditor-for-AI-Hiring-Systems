@@ -38,8 +38,6 @@ def load_csv_data(file_path):
 def validate_dataframe(data_frame):
     if data_frame.columns.duplicated().any():
         raise ValueError("Duplicate values found")
-    else:
-        print("INFO: No duplicate columns found")
 
     if data_frame[["gender","race","college_tier","hired"]].isnull().any().any():
         log_status("CRITICAL","Some values from critical columns are missing")
@@ -54,7 +52,7 @@ def validate_dataframe(data_frame):
     else:
         log_status("INFO","All hiring values for labels are valid")
 
-    return None
+    return data_frame.info()
 
 
 def summarize_data(data_frame):
