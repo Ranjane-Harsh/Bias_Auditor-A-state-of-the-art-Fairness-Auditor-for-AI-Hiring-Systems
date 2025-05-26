@@ -34,19 +34,34 @@ def eliminate_outliers(df):
     print(f"{original_count - len(filtered_df)} rows removed as outliers")
     return filtered_df
 
+def standardize_col(df):
+    standarized_columns = [col.strip().lower().replace(" ","_") for col in df.columns]
+    df.columns = standarized_columns
+    return df
+
+def encode_categorical_col(df,non_numeric_col):
+    edu_order = { "Bachelors":0, "Masters":1, "PhD":2 }
+    df["education_level"] = df["education_level"].map(edu_order)
+    df = pd.get_dummies(df, columns = non_numeric_col, drop_first = True,dtype = float)
+    return df
+
 def main():
     data_frame = load_csv_data(file_path)
-    non_numeric_col = ["gender","race","college_tier","education_level","hired"]
+    non_numeric_col = ["gender","race","college_tier","education_level"]
     non_numeric_df = handle_missing_values(data_frame,non_numeric_col,"Drop")
      
     numeric_col = ["years_experience", "skills_score","interview_score","test_score"]
     non_null_df = handle_missing_values(non_numeric_df,numeric_col,"Median")
     print("The summary for non_empty dataframe looks like: ")
     print(validate_dataframe(non_null_df))
-    sb.boxplot(non_null_df['years_experience'])
+
     outlier_free = eliminate_outliers(non_null_df)
-    sb.boxplot(outlier_free['years_experience'])
-    plt.show()
+    standardized_df = standardize_col(outlier_free)
+    encoded_df= encode_categorical_col(standardized_df,non_numeric_col)
+    print(encoded_df.dtypes)
+    
+    
+    
 
 if __name__ == "__main__":
     main()
