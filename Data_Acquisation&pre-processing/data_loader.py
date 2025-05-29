@@ -52,7 +52,7 @@ def validate_dataframe(data_frame):
 
 
 def summarize_data(data_frame):
-    return data_frame.describe()
+    return data_frame.describe(), data_frame.head()
 
 sensitive_columns = ["gender","race","college_tier","education_level"]
 def extract_sensitive_columns(data_frame,sensitive_col):

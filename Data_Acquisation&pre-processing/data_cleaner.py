@@ -42,12 +42,13 @@ def standardize_col(df):
 def encode_categorical_col(df,non_numeric_col):
     edu_order = { "Bachelors":0, "Masters":1, "PhD":2 }
     df["education_level"] = df["education_level"].map(edu_order)
-    df = pd.get_dummies(df, columns = non_numeric_col, drop_first = True,dtype = float)
+    df = pd.get_dummies(df, columns = non_numeric_col, drop_first = True, dtype = float)
     return df
 
 def scale_numerical_col(df,numeric_col):
     scaler = StandardScaler()
     scaled_val = scaler.fit_transform(df[numeric_col])
-    scaled_df = pd.DataFrame(scaled_val, columns=numeric_col)
+    scaled_df = df.copy()
+    scaled_df[numeric_col] = scaled_val
 
     return scaled_df
