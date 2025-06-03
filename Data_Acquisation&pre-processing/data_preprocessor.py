@@ -28,7 +28,6 @@ def split_labels(df):
 def main():
     file_path = r"D:\Coding\Projects\Bias_Auditor A state of the art Fairness Auditor for AI Hiring Systems\synthetic_ai_hiring_dataset_v2.csv"
     proccessed_df = load_and_preprocess_data(file_path)
-    print(summarize_data(proccessed_df))
 
     X_train, y_train = split_labels(proccessed_df)
     print(X_train)

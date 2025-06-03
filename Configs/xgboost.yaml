@@ -1,0 +1,15 @@
+model_name: xgboost
+params:
+  n_estimators: 150
+  learning_rate: 0.05
+  max_depth: 6
+  subsample: 0.8
+  colsample_bytree: 0.8
+  random_state: 42
+fairness:
+  protected_attribute: gender
+  fairness_metric: equal_opportunity
+  mitigation: equalized_odds_postprocessing
+_meta:
+  created_at: '2025-06-03T14:18:32.401662Z'
+  author: Bias Buster Pro
