@@ -41,3 +41,4 @@ def initialize_model(config_dict):
 
 model_instance = initialize_model(config_dict)
 print(type(model_instance))
+
