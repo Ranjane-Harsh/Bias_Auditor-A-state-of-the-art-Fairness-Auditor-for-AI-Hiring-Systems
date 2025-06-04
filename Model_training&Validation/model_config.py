@@ -1,5 +1,8 @@
 import json
 import yaml
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from xgboost import XGBClassifier
 
 def load_model_config(config_path):
     if config_path.endswith("json"):
@@ -20,3 +23,21 @@ def load_model_config(config_path):
 
 config_dict = load_model_config(r"D:\Coding\Projects\Bias_Auditor A state of the art Fairness Auditor for AI Hiring Systems\Configs\random_forest.yaml")
 print(config_dict)
+
+def initialize_model(config_dict):
+    model_name = config_dict.get("model_name")
+    model_params = config_dict.get("params")
+
+    MODEL_REGISTRY = {"logistic_regression" : LogisticRegression, "random_forest" : RandomForestClassifier, "xgboost" : XGBClassifier}
+
+    model_class = MODEL_REGISTRY.get(model_name)
+
+    if model_class is None:
+        raise ValueError(f"Model: {model_name} is not supported in the registry")
+    
+    model_instance = model_class(**model_params)
+
+    return model_instance
+
+model_instance = initialize_model(config_dict)
+print(type(model_instance))
