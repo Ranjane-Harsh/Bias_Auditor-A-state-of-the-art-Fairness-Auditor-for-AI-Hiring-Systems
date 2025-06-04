@@ -1,7 +1,7 @@
 from data_loader import load_csv_data, validate_dataframe,extract_sensitive_columns,summarize_data,log_status
 from data_cleaner import handle_missing_values,eliminate_outliers,standardize_col,encode_categorical_col,scale_numerical_col
 
-
+file_path = r"D:\Coding\Projects\Bias_Auditor A state of the art Fairness Auditor for AI Hiring Systems\Dataset\synthetic_ai_hiring_dataset_v2.csv"
 def load_and_preprocess_data(file_path):
     df = load_csv_data(file_path)
     print(validate_dataframe(df))
@@ -25,13 +25,10 @@ def split_labels(df):
     y = df[label_col]
     return X,y
 
-def main():
-    file_path = r"D:\Coding\Projects\Bias_Auditor A state of the art Fairness Auditor for AI Hiring Systems\Dataset\synthetic_ai_hiring_dataset_v2.csv"
+def get_data(file_path):
+    
     proccessed_df = load_and_preprocess_data(file_path)
 
-    X_train, y_train = split_labels(proccessed_df)
-    print(X_train)
-    print(y_train)
+    return split_labels(proccessed_df)
     
-if __name__ == "__main__":  
-    main()
+    
