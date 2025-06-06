@@ -21,8 +21,6 @@ def load_model_config(config_path):
 
     return config_dict
 
-config_dict = load_model_config(r"D:\Coding\Projects\Bias_Auditor A state of the art Fairness Auditor for AI Hiring Systems\Configs\random_forest.yaml")
-print(config_dict)
 
 def initialize_model(config_dict):
     model_name = config_dict.get("model_name")
@@ -39,6 +37,4 @@ def initialize_model(config_dict):
 
     return model_instance
 
-model_instance = initialize_model(config_dict)
-print(type(model_instance))
 

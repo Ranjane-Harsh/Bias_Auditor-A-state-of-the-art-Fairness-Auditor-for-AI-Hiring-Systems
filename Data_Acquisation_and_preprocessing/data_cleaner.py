@@ -1,4 +1,4 @@
-from data_loader import log_status
+from Data_Acquisation_and_preprocessing.data_loader import log_status
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 
