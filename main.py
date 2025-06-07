@@ -4,10 +4,17 @@ from Model_training_and_Validation.model_trainer import train_model
 
 
 def run_pipeline():
-    file_path = r"D:\Coding\Projects\Bias_Auditor A state of the art Fairness Auditor for AI Hiring Systems\Dataset\synthetic_ai_hiring_dataset_v2.csv"
-    X_train,y_train = get_data(file_path)
+    training_dataset = r"D:\Coding\Projects\Bias_Auditor A state of the art Fairness Auditor for AI Hiring Systems\Dataset\synthetic_ai_hiring_dataset_v2.csv"
+    testing_dataset = r"D:\Coding\Projects\Bias_Auditor A state of the art Fairness Auditor for AI Hiring Systems\Dataset\test_synthetic_ai_hiring_dataset_v2.csv"
+    print("This is training dataset")
+    X_train,y_train = get_data(training_dataset)
+    
+    print("This is testing dataset")
+    X_test, y_test = get_data(testing_dataset)
+
     config_dict = load_model_config(r"D:\Coding\Projects\Bias_Auditor A state of the art Fairness Auditor for AI Hiring Systems\Configs\random_forest.yaml")
     model_instance = initialize_model(config_dict)
+
     trained_model = train_model(model_instance,X_train,y_train)
 
 
