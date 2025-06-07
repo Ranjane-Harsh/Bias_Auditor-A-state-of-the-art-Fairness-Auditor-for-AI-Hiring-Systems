@@ -37,12 +37,15 @@ def eliminate_outliers(df):
 def standardize_col(df):
     standarized_columns = [col.strip().lower().replace(" ","_") for col in df.columns]
     df.columns = standarized_columns
+    log_status("INFO","Column names are standardized")
     return df
 
-def encode_categorical_col(df,non_numeric_col):
+def encode_categorical_col(df, non_numeric_col):
     edu_order = { "Bachelors":0, "Masters":1, "PhD":2 }
-    df["education_level"] = df["education_level"].map(edu_order)
-    df = pd.get_dummies(df, columns = non_numeric_col, drop_first = True, dtype = float)
+    df = df.copy()  # Ensure you're working on a copy
+    df.loc[:, "education_level"] = df["education_level"].map(edu_order)
+    df = pd.get_dummies(df, columns=non_numeric_col, drop_first=True, dtype=float)
+    log_status("INFO", "Non-numeric values encoded")
     return df
 
 def scale_numerical_col(df,numeric_col):
@@ -50,5 +53,5 @@ def scale_numerical_col(df,numeric_col):
     scaled_val = scaler.fit_transform(df[numeric_col])
     scaled_df = df.copy()
     scaled_df[numeric_col] = scaled_val
-
+    log_status("INFO","Numeric values scaled")
     return scaled_df

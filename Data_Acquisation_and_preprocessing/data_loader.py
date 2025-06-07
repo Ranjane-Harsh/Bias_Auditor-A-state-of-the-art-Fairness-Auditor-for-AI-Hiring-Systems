@@ -40,7 +40,8 @@ def validate_dataframe(data_frame):
     if data_frame[["gender","race","college_tier","hired"]].isnull().any().any():
         log_status("CRITICAL","Some values from critical columns are missing")
         missing_precentage = data_frame[["gender","race","college_tier","hired"]].isnull().mean() * 100
-        print(f"Percentage of missing values: {missing_precentage}")
+        print(f"Percentage of missing values:\n ")
+        print(missing_precentage)
     else:
         log_status("INFO","No missing values in critical columns")
 
@@ -49,7 +50,7 @@ def validate_dataframe(data_frame):
         raise ValueError("Invalid Hiring values detected")
     else:
         log_status("INFO","All hiring values for labels are valid")
-
+    return 
 
 def summarize_data(data_frame):
     return data_frame.describe(), data_frame.head()
