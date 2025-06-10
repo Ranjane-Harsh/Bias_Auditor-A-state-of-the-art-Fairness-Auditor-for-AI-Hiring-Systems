@@ -1,7 +1,7 @@
 from Data_Acquisation_and_preprocessing.data_preprocessor import get_data
 from Data_Acquisation_and_preprocessing.data_loader import log_status
 from Model_training_and_Validation.model_config import load_model_config,initialize_model 
-from Model_training_and_Validation.model_trainer import train_model
+from Model_training_and_Validation.model_trainer import train_model,generate_predictions
 
 
 def run_pipeline():
@@ -17,6 +17,9 @@ def run_pipeline():
     model_instance = initialize_model(config_dict)
 
     trained_model = train_model(model_instance,X_train,y_train)
+    y_pred,y_proba = generate_predictions(trained_model,X_test)
+    print(y_pred[:5])
+    print(y_proba[:5])
 
 
 if __name__ == "__main__":

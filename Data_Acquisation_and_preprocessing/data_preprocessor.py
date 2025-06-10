@@ -4,7 +4,7 @@ from Data_Acquisation_and_preprocessing.data_cleaner import handle_missing_value
 
 def load_and_preprocess_data(file_path):
     df = load_csv_data(file_path)
-    print(validate_dataframe(df))
+    validate_dataframe(df)
     
     non_numeric_col = ["gender","race","college_tier","education_level"]
     non_numeric_df = handle_missing_values(df,non_numeric_col,"Drop")
