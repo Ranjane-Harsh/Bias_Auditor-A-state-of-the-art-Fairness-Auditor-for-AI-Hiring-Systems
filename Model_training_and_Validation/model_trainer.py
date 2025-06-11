@@ -1,5 +1,9 @@
 import time
+import os
+import joblib
+from datetime import datetime
 from Data_Acquisation_and_preprocessing.data_loader import log_status
+
 def train_model(model, X_train, y_train, verbose= True):
     start_time = time.time()
     trained_model = model.fit(X_train,y_train)
@@ -20,3 +24,12 @@ def generate_predictions(model, X_test):
         log_status("CRITICAL","This model does not support this command")
 
     return y_pred,y_proba
+
+def save_model(model, model_name, save_dir):
+    os.makedirs(save_dir, exist_ok=True)
+    timestamp = datetime.now().strftime("%d%m%Y_%H%M%S")
+    filename = f"{model_name}_{timestamp}.joblib"
+    model_path = os.path.join(save_dir,filename)
+    joblib.dump(model,model_path)
+
+    return model_path

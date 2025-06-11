@@ -1,7 +1,7 @@
 from Data_Acquisation_and_preprocessing.data_preprocessor import get_data
 from Data_Acquisation_and_preprocessing.data_loader import log_status
 from Model_training_and_Validation.model_config import load_model_config,initialize_model 
-from Model_training_and_Validation.model_trainer import train_model,generate_predictions
+from Model_training_and_Validation.model_trainer import train_model,generate_predictions,save_model
 
 
 def run_pipeline():
@@ -18,6 +18,8 @@ def run_pipeline():
 
     trained_model = train_model(model_instance,X_train,y_train)
     y_pred,y_proba = generate_predictions(trained_model,X_test)
+    save_model(trained_model,"Random_forest",r"D:\Coding\Projects\Bias_Auditor A state of the art Fairness Auditor for AI Hiring Systems\Models")
+    
     print(y_pred[:5])
     print(y_proba[:5])
 
