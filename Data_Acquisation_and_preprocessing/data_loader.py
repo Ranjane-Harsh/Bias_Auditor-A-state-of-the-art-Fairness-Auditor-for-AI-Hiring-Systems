@@ -55,11 +55,10 @@ def validate_dataframe(data_frame):
 def summarize_data(data_frame):
     return data_frame.describe(), data_frame.head()
 
-sensitive_columns = ["gender","race","college_tier","education_level"]
 def extract_sensitive_columns(data_frame,sensitive_col):
     for col in sensitive_col:
         if col not in data_frame.columns:
-            raise ValueError("{col} not found")
+            raise ValueError(f"{col} not found")
     
     sensitive_df = data_frame[sensitive_col]
     return sensitive_df

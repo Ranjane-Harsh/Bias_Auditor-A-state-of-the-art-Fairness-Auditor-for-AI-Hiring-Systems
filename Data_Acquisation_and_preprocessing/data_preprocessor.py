@@ -25,10 +25,8 @@ def split_labels(df):
     y = df[label_col]
     return X,y
 
-def get_data(file_path):
+def get_data(proccessed_df):
     
-    proccessed_df = load_and_preprocess_data(file_path)
-
     return split_labels(proccessed_df)
     
     
