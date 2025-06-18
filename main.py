@@ -11,14 +11,12 @@ def run_pipeline():
     
     #Loading, preprocessing and spliting training dataset
     log_status("INFO","Processing Training Dataset : ")
-    train_proccessed_df = load_and_preprocess_data(training_dataset)
-    X_train,y_train = get_data(train_proccessed_df)
+    X_train,y_train = get_data(training_dataset)
     print("\n")
 
     #Loading, preprocessing and spliting testing dataset
     log_status("INFO","Processing Testing Dataset")
-    test_proccessed_df = load_and_preprocess_data(testing_dataset)
-    X_test, y_test = get_data(test_proccessed_df)
+    X_test, y_test = get_data(testing_dataset)
 
     config_dict = load_model_config(r"D:\Coding\Projects\Bias_Auditor A state of the art Fairness Auditor for AI Hiring Systems\Configs\random_forest.yaml")
     model_instance = initialize_model(config_dict)
@@ -28,9 +26,12 @@ def run_pipeline():
     #save_model(trained_model,"Random_forest",r"D:\Coding\Projects\Bias_Auditor A state of the art Fairness Auditor for AI Hiring Systems\Models")
     metrices = evaluate_performance(y_test,y_pred)
 
+    standardized_df = load_and_preprocess_data(testing_dataset)
     sensitive_columns = ["gender","race","college_tier","education_level"]
-    sensitive_df = extract_sensitive_columns(test_proccessed_df,sensitive_columns)
+
+    sensitive_df = extract_sensitive_columns(standardized_df,sensitive_columns)
     fairness_results = evaluate_fairness(y_test,y_pred,sensitive_df)
+    
     print(fairness_results)
 
 
