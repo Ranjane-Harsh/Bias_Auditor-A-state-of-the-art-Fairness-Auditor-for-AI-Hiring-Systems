@@ -1,3 +1,4 @@
+from Data_Acquisation_and_preprocessing.data_loader import log_status
 import numpy as np
 import pandas as pd
 
@@ -25,7 +26,7 @@ def confusion_matrix_by_grp(y_true_arr, y_pred_arr, col_val_arr):
                       'FP': int(FP),
                       'TN':int(TN),
                       'FN':int(FN)}
-    print(f"Confusion Matrix looks like{results}")
+    
     return results
 
 def selection_rate_by_grp(y_pred_arr,col_val_arr):
@@ -46,7 +47,6 @@ def demographic_parity_difference(rates):
     min_rate = rates.min()
     difference = max_rate - min_rate
     results = {'Selection_rate': rates,'Max_rate':max_rate,'Min_rate':min_rate,'Difference':difference}
-    print(results)
     return results
 
 def disparate_impact_ratios(y_pred_arr, rates):
@@ -80,31 +80,47 @@ def tpr_fpr_by_grp(Confusion_matrix):
     tpr_series = pd.Series(tpr_dict, name = "TPR")
     fpr_series = pd.Series(fpr_dict, name = "FPR")
 
-    print(f"This is True positive values {tpr_series}")
-    print(f"This is False positive values {fpr_series}")
     return tpr_series, fpr_series
 
 def equalized_odds_difference(tpr_series, fpr_series):
     tpr_diff = tpr_series.max() - tpr_series.min()
     fpr_diff = fpr_series.max() - fpr_series.min()
     results = { 'TPR_difference':tpr_diff, 'FPR_difference': fpr_diff }
-    print(f"These are results {results}")
 
     return results
 
+def bias_summary_for_attribute(y_true_arr, y_pred_arr,col_val_arr):
+    summary_data = {}
+    confusion_matrix = confusion_matrix_by_grp(y_true_arr,y_pred_arr,col_val_arr)
+    rates = selection_rate_by_grp(y_pred_arr,col_val_arr)
+    dp_results = demographic_parity_difference(rates)
+    di_ratio = disparate_impact_ratios(y_pred_arr,rates)
+    tpr_series, fpr_series = tpr_fpr_by_grp(confusion_matrix)
+    eo_results = equalized_odds_difference(tpr_series,fpr_series)
+
+    summary_data['Selection_rate'] = rates.to_dict()
+    summary_data['Demographic_Parity_Difference'] = {**{g: np.nan for g in rates.index}, 'Difference': dp_results['Difference']}
+    summary_data['Disparate_impact_ratio'] = di_ratio.to_dict()
+    summary_data['True_postive_rate'] = tpr_series.to_dict()
+    summary_data['True_positive_diff'] = {**{g: np.nan for g in tpr_series.index}, 'Difference': eo_results['TPR_difference']}
+    summary_data['False_postive_rate'] = fpr_series.to_dict()
+    summary_data['False_positive_diff'] = {**{g: np.nan for g in fpr_series.index}, 'Difference': eo_results['FPR_difference']}
+
+    summary_df = pd.DataFrame.from_dict(summary_data, orient= 'index')
+    return summary_df
+
 def compute_all_metrices(y_true, y_pred, sensitive_df):
     if len(y_true) == len(y_pred) == len(sensitive_df):
-        print("Shape of all parameters match")
+        log_status("INFO","Shape of all parameters match")
     else:
-        print("Shape mismatch error")
+        log_status("ERROR","Shape mismatch error")
 
     for column in sensitive_df.columns:
         columns_values = sensitive_df[column]
         y_true_arr, y_pred_arr, col_val_arr = normalize_input(y_true,y_pred,columns_values)
-        confusion_matrix = confusion_matrix_by_grp(y_true_arr,y_pred_arr,col_val_arr) 
-        rates = selection_rate_by_grp(y_pred_arr,col_val_arr)
-        demographic_parity_difference(rates)
-        disparate_impact_ratios(y_pred_arr,rates)
-        tpr_fpr_by_grp(confusion_matrix)
 
+        print(f"This is the Metrices Dataframe for : {column}")
+        summary_df = bias_summary_for_attribute(y_true_arr,y_pred_arr,col_val_arr)
+        print(summary_df)
+        print("\n")
     return 

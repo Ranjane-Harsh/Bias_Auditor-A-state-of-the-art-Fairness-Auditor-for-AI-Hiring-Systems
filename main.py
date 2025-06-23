@@ -32,7 +32,7 @@ def run_pipeline():
 
     sensitive_df = extract_sensitive_columns(standardized_df,sensitive_columns)
     fairness_results = evaluate_fairness(y_test,y_pred,sensitive_df)
-    
+    print("\n")
     compute_all_metrices(y_test,y_pred,sensitive_df)
 
 
