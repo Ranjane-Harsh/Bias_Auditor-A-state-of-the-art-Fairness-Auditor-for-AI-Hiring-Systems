@@ -33,7 +33,9 @@ def run_pipeline():
     sensitive_df = extract_sensitive_columns(standardized_df,sensitive_columns)
     fairness_results = evaluate_fairness(y_test,y_pred,sensitive_df)
     print("\n")
-    compute_all_metrices(y_test,y_pred,sensitive_df)
+    summary_dict = compute_all_metrices(y_test,y_pred,sensitive_df)
+    print("This is the summary dictonary")
+    print(summary_dict)
 
 
 if __name__ == "__main__":

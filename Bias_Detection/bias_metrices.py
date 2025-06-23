@@ -115,12 +115,14 @@ def compute_all_metrices(y_true, y_pred, sensitive_df):
     else:
         log_status("ERROR","Shape mismatch error")
 
+    summary_dict = {}
     for column in sensitive_df.columns:
         columns_values = sensitive_df[column]
         y_true_arr, y_pred_arr, col_val_arr = normalize_input(y_true,y_pred,columns_values)
 
         print(f"This is the Metrices Dataframe for : {column}")
         summary_df = bias_summary_for_attribute(y_true_arr,y_pred_arr,col_val_arr)
-        print(summary_df)
+        summary_dict[column] = summary_df
         print("\n")
-    return 
+    
+    return summary_dict
