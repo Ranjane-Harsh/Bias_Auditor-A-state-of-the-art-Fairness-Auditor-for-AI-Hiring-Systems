@@ -25,7 +25,7 @@ def confusion_matrix_by_grp(y_true_arr, y_pred_arr, col_val_arr):
                       'FP': int(FP),
                       'TN':int(TN),
                       'FN':int(FN)}
-
+    print(f"Confusion Matrix looks like{results}")
     return results
 
 def selection_rate_by_grp(y_pred_arr,col_val_arr):
@@ -45,8 +45,51 @@ def demographic_parity_difference(rates):
     max_rate = rates.max()
     min_rate = rates.min()
     difference = max_rate - min_rate
-    results = {'Selection_rate':rates,'Max_rate':max_rate,'Min_rate':min_rate,'Difference':difference}
+    results = {'Selection_rate': rates,'Max_rate':max_rate,'Min_rate':min_rate,'Difference':difference}
     print(results)
+    return results
+
+def disparate_impact_ratios(y_pred_arr, rates):
+    overall_rate = y_pred_arr.mean()
+    ratios = rates / overall_rate
+    return ratios
+
+def tpr_fpr_by_grp(Confusion_matrix):
+    tpr_dict = {}
+    fpr_dict = {}
+
+    for val,counts in Confusion_matrix.items():
+        TP = counts['TP']
+        FN = counts['FN']
+        FP = counts['FP']
+        TN = counts['TN']
+
+        if (TP + FN) > 0:
+            tpr = TP / (TP + FN)
+        else:
+            tpr = np.nan
+
+        if (FP + TN) > 0:
+            fpr = FP / (FP + TN)
+        else:
+            fpr = np.nan
+
+        tpr_dict[val] = tpr
+        fpr_dict[val] = fpr
+
+    tpr_series = pd.Series(tpr_dict, name = "TPR")
+    fpr_series = pd.Series(fpr_dict, name = "FPR")
+
+    print(f"This is True positive values {tpr_series}")
+    print(f"This is False positive values {fpr_series}")
+    return tpr_series, fpr_series
+
+def equalized_odds_difference(tpr_series, fpr_series):
+    tpr_diff = tpr_series.max() - tpr_series.min()
+    fpr_diff = fpr_series.max() - fpr_series.min()
+    results = { 'TPR_difference':tpr_diff, 'FPR_difference': fpr_diff }
+    print(f"These are results {results}")
+
     return results
 
 def compute_all_metrices(y_true, y_pred, sensitive_df):
@@ -58,8 +101,10 @@ def compute_all_metrices(y_true, y_pred, sensitive_df):
     for column in sensitive_df.columns:
         columns_values = sensitive_df[column]
         y_true_arr, y_pred_arr, col_val_arr = normalize_input(y_true,y_pred,columns_values)
-        confusion_matrix_by_grp(y_true_arr,y_pred_arr,col_val_arr) 
+        confusion_matrix = confusion_matrix_by_grp(y_true_arr,y_pred_arr,col_val_arr) 
         rates = selection_rate_by_grp(y_pred_arr,col_val_arr)
         demographic_parity_difference(rates)
+        disparate_impact_ratios(y_pred_arr,rates)
+        tpr_fpr_by_grp(confusion_matrix)
 
     return 
