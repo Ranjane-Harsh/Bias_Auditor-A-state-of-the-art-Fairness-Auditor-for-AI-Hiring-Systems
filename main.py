@@ -4,12 +4,13 @@ from Model_training_and_Validation.model_config import load_model_config,initial
 from Model_training_and_Validation.model_trainer import train_model,generate_predictions,save_model
 from Model_training_and_Validation.evaluator import evaluate_performance,evaluate_fairness
 from Bias_Detection.bias_metrices import compute_all_metrices
+from Bias_Detection.bias_reporter import run_bias_report
 
 
 def run_pipeline():
     training_dataset = r"D:\Coding\Projects\Bias_Auditor A state of the art Fairness Auditor for AI Hiring Systems\Dataset\synthetic_ai_hiring_dataset_v2.csv"
     testing_dataset = r"D:\Coding\Projects\Bias_Auditor A state of the art Fairness Auditor for AI Hiring Systems\Dataset\test_synthetic_ai_hiring_dataset_v2.csv"
-    
+    output_dir = r"D:\Coding\Projects\Bias_Auditor A state of the art Fairness Auditor for AI Hiring Systems\Reports"
     #Loading, preprocessing and spliting training dataset
     log_status("INFO","Processing Training Dataset : ")
     X_train,y_train = get_data(training_dataset)
@@ -36,6 +37,7 @@ def run_pipeline():
     summary_dict = compute_all_metrices(y_test,y_pred,sensitive_df)
     print("This is the summary dictonary")
     print(summary_dict)
+    run_bias_report(summary_dict,output_dir)
 
 
 if __name__ == "__main__":
