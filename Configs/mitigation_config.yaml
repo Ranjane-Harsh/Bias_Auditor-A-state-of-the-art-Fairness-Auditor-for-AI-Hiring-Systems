@@ -1,0 +1,37 @@
+# mitigation_config.yaml
+
+# 1. Which mitigation stages to execute (any subset of: reweighing, adversarial, equalized_odds)
+stages:
+  - reweighing
+  - adversarial
+  - equalized_odds
+
+# 2. List all sensitive attributes in your dataset
+sensitive_attributes:
+  - Gender
+  - Race
+  - College_tier
+  - education_level
+
+# 3. Pre‑processing re‑weighing (no extra hyperparameters by default)
+reweighing: {}
+
+# 4. In‑processing adversarial settings
+adversarial:
+  # size of hidden layers for each adversary network
+  hidden_layers: [64, 32]
+  # λ: trade‑off weight between prediction loss and adversarial loss
+  weight_lambda: 0.5
+  # number of adversarial training epochs
+  n_epochs: 10
+  # batch size for adversarial training
+  batch_size: 128
+  # learning rate for the adversary head
+  lr_adv: 1e-4
+
+# 5. Post‑processing Equalized Odds settings
+equalized_odds:
+  # allowable tolerance on TPR/FPR disparity
+  epsilon: 0.02
+  # minimum samples required per group to compute thresholds
+  min_group_size: 50
