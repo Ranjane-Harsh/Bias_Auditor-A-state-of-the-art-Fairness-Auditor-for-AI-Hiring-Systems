@@ -1,0 +1,8 @@
+,0,1,Difference
+Selection_rate,0.2946067415730337,0.31239935587761675,
+Demographic_Parity_Difference,,,0.017792614304583065
+Disparate_impact_ratio,0.982489360565537,1.0418262724011593,
+True_postive_rate,,0.31239935587761675,
+True_positive_diff,,,0.0
+False_postive_rate,0.2946067415730337,,
+False_positive_diff,,,0.0
