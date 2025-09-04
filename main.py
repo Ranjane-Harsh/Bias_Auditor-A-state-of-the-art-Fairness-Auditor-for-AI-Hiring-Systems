@@ -25,22 +25,26 @@ def run_pipeline():
     config_dict = load_model_config(r"D:\Coding\Projects\Bias_Auditor A state of the art Fairness Auditor for AI Hiring Systems\Configs\logistic_regression.yaml")
     model_instance = initialize_model(config_dict)
 
+    #Training and Generating Predictions
     trained_model = train_model(model_instance,X_train,y_train)
     y_pred,y_proba = generate_predictions(trained_model,X_test)
     #save_model(trained_model,"Random_forest",r"D:\Coding\Projects\Bias_Auditor A state of the art Fairness Auditor for AI Hiring Systems\Models")
+
+    #Evaluating Bias Metrices
     metrices = evaluate_performance(y_test,y_pred)
     print(metrices)
-    standardized_df = load_and_preprocess_data(testing_dataset)
+    standardized_df = load_and_preprocess_data(training_dataset)
     print(f"Length of Dataframe : {len(standardized_df)}")
     sensitive_columns = ["gender","race","college_tier","education_level","hired"]
-
     sensitive_df = extract_sensitive_columns(standardized_df,sensitive_columns)
-    fairness_results = evaluate_fairness(y_test,y_pred,sensitive_df)
+    #fairness_results = evaluate_fairness(y_test,y_pred,sensitive_df)
+    
     print("\n")
     #summary_dict = compute_all_metrices(y_test,y_pred,sensitive_df)
     #print("This is the summary dictonary")
     #run_bias_report(summary_dict,output_dir)
-
+    
+    #Bias mitigation using various methods
     mitigation_config = load_mitigation_config(r"D:\Coding\Projects\Bias_Auditor A state of the art Fairness Auditor for AI Hiring Systems\Configs\mitigation_config.yaml")
     compute_reweighing_weights(sensitive_df,y_test) 
 

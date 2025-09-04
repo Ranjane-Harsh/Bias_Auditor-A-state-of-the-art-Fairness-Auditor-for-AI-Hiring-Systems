@@ -52,7 +52,15 @@ def compute_reweighing_weights(sensitive_df,label_col):
 
         dataframe['weight'] = dataframe['ideal'] / dataframe['count']
 
-        print(dataframe)
+        for _, row in dataframe.iterrows():
+            key = (col , row[col], row["hired"])
+            reweighing_weights[key] = row['weight']
+
+    for k, v in reweighing_weights.items():
+        print(f"{k} : {v}")
+
+    print(reweighing_weights)
+    return reweighing_weights
 
         
 
