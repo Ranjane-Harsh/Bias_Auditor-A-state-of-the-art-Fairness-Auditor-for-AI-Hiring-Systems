@@ -28,20 +28,13 @@ def load_mitigation_config(file_path):
 
     return mitigation_cfg
 
-def compute_reweighing_weights(sensitive_df,label_col):
+def compute_reweighing_weights(sensitive_df):
     N = len(sensitive_df)
-    print(f"Number of rows in Dataframe are : {N}")
+    
     reweighing_weights = {}
     sensitive_columns = ["gender","race","college_tier","education_level"]
     for col in sensitive_columns:
-        '''print(f"\n{col}:\n{sensitive_df[col].value_counts()}")
-
-        print(f"\n{col} vs labels")
-        print(pd.crosstab(sensitive_df[col], sensitive_df["hired"]))'''
-
-        unique_attr_val = sensitive_df[col].unique()
-        unique_lables = np.unique(sensitive_df["hired"])
-
+        
         counts_attr = sensitive_df[col].value_counts()
         counts_label = pd.Series(sensitive_df["hired"]).value_counts()
 
@@ -56,31 +49,39 @@ def compute_reweighing_weights(sensitive_df,label_col):
             key = (col , row[col], row["hired"])
             reweighing_weights[key] = row['weight']
 
-    for k, v in reweighing_weights.items():
-        print(f"{k} : {v}")
-
-    print(reweighing_weights)
     return reweighing_weights
 
-        
-
-        
-
+def apply_reweighting(df,sensitive_attributes, reweighing_weights, scaling_range):
     
+    weights_df = pd.DataFrame(index=df.index)
+    for attr in sensitive_attributes:
+        per_attr_map = {}
+        for (a, val, lab), w in reweighing_weights.items():
+            if a == attr:
+                per_attr_map[(val, lab)] = float(w)
 
-    '''for attr in sensitive_columns:
-        counts_attr = sensitive_df[attr].value_counts()
-        counts_label = sensitive_df["hired"].value_counts()
-        joint_df = (sensitive_df.groupby([attr,"hired"]).size().reset_index(name = 'count'))
-        joint_df['ideal'] = (joint_df[attr].map(counts_attr) * sensitive_df["hired"].map(counts_label)) / N        
+        pairs = list(zip(df[attr].values, df["hired"].values))
+        pairs_series = pd.Series(pairs, index = df.index)
 
-        joint_df['weight'] = joint_df['ideal'] / joint_df['count']
+        weights_df_col = pairs_series.map(per_attr_map)
 
-        for _, row in joint_df.iterrows():        
-            key = (attr, row[attr], row["hired"])   
-            reweighing_weights[key] = row['weight']        
-    
-    for k,v in reweighing_weights.items():
-        print(f"{k}: {v}")
+        col_name = f"w_{attr}"
+        weights_df[col_name] = weights_df_col
 
-    return reweighing_weights'''
+    combined = weights_df.prod(axis=1)
+
+    lower_range, upper_range = scaling_range
+    combined_scaled = combined.clip(lower= lower_range, upper = upper_range)
+
+    mean_val = combined_scaled.mean()
+
+    final_weights = (combined_scaled/mean_val).astype(float)
+    final_weights.name = 'sample_weights'
+
+    return final_weights
+
+def reweighing(sensitive_df, sensitive_columns):
+    reweighing_weights = compute_reweighing_weights(sensitive_df)
+    sample_weights = apply_reweighting(sensitive_df, sensitive_columns, reweighing_weights,(0.1,10))
+
+    return sample_weights

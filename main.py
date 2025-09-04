@@ -5,7 +5,7 @@ from Model_training_and_Validation.model_trainer import train_model,generate_pre
 from Model_training_and_Validation.evaluator import evaluate_performance,evaluate_fairness
 from Bias_Detection.bias_metrices import compute_all_metrices
 from Bias_Detection.bias_reporter import run_bias_report
-from Bias_Mitigation.preprocessor_reweighting import load_mitigation_config,compute_reweighing_weights
+from Bias_Mitigation.preprocessor_reweighting import load_mitigation_config, reweighing
 
 
 def run_pipeline():
@@ -20,21 +20,21 @@ def run_pipeline():
     #Loading, preprocessing and spliting testing dataset
     log_status("INFO","Processing Testing Dataset")
     X_test, y_test = get_data(testing_dataset)
-    print(f"Length of Testing Dataset : {len(X_test)}")   
+       
 
-    config_dict = load_model_config(r"D:\Coding\Projects\Bias_Auditor A state of the art Fairness Auditor for AI Hiring Systems\Configs\logistic_regression.yaml")
+    config_dict = load_model_config(r"D:\Coding\Projects\Bias_Auditor A state of the art Fairness Auditor for AI Hiring Systems\Configs\random_forest.yaml")
     model_instance = initialize_model(config_dict)
 
     #Training and Generating Predictions
-    trained_model = train_model(model_instance,X_train,y_train)
+    trained_model = train_model(model_instance,X_train,y_train, None)
     y_pred,y_proba = generate_predictions(trained_model,X_test)
     #save_model(trained_model,"Random_forest",r"D:\Coding\Projects\Bias_Auditor A state of the art Fairness Auditor for AI Hiring Systems\Models")
 
     #Evaluating Bias Metrices
     metrices = evaluate_performance(y_test,y_pred)
-    print(metrices)
+    print(f"These are the metrices after training : {metrices}")
     standardized_df = load_and_preprocess_data(training_dataset)
-    print(f"Length of Dataframe : {len(standardized_df)}")
+    
     sensitive_columns = ["gender","race","college_tier","education_level","hired"]
     sensitive_df = extract_sensitive_columns(standardized_df,sensitive_columns)
     #fairness_results = evaluate_fairness(y_test,y_pred,sensitive_df)
@@ -46,7 +46,13 @@ def run_pipeline():
     
     #Bias mitigation using various methods
     mitigation_config = load_mitigation_config(r"D:\Coding\Projects\Bias_Auditor A state of the art Fairness Auditor for AI Hiring Systems\Configs\mitigation_config.yaml")
-    compute_reweighing_weights(sensitive_df,y_test) 
+    sample_weights = reweighing(sensitive_df, sensitive_columns)
+
+    #Retraining and evaluating the model after Bias Mitigation
+    retrained_model = train_model(model_instance, X_train, y_train, sample_weights)
+    y_pred_r, y_prob_r = generate_predictions(retrained_model, X_test)
+    retrained_metrices = evaluate_performance(y_test, y_pred_r)
+    print(f"These are the metrices after retraining: {retrained_metrices}")
 
 if __name__ == "__main__":
     run_pipeline()
