@@ -1,3 +1,4 @@
+import numpy as np
 from Data_Acquisation_and_preprocessing.data_preprocessor import get_data,load_and_preprocess_data
 from Data_Acquisation_and_preprocessing.data_loader import log_status,extract_sensitive_columns
 from Model_training_and_Validation.model_config import load_model_config,initialize_model 
@@ -6,7 +7,7 @@ from Model_training_and_Validation.evaluator import evaluate_performance,evaluat
 from Bias_Detection.bias_metrices import compute_all_metrices
 from Bias_Detection.bias_reporter import run_bias_report
 from Bias_Mitigation.preprocessor_reweighting import load_mitigation_config, reweighing
-from Bias_Mitigation.postprocessor_equalized import extract_positive_scores, compute_global_tpr_fpr
+from Bias_Mitigation.postprocessor_equalized import extract_positive_scores, compute_global_tpr_fpr, run_equalized_odds_postprocessing
 
 
 def run_pipeline():
@@ -56,8 +57,10 @@ def run_pipeline():
     print(f"These are the metrices after retraining: {retrained_metrices}")
 
     #Bias Mitigation using post-processor Equalized Odds Mitigation
-    scores = extract_positive_scores(y_proba)
-    compute_global_tpr_fpr(scores, y_train, 0.5)
+    eo_results = run_equalized_odds_postprocessing(y_train , y_proba , mitigation_config, 0.5, sensitive_df)
+
+    print(f"These are the eo results : {eo_results}")
+
 
 if __name__ == "__main__":
     run_pipeline()
