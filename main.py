@@ -6,6 +6,7 @@ from Model_training_and_Validation.evaluator import evaluate_performance,evaluat
 from Bias_Detection.bias_metrices import compute_all_metrices
 from Bias_Detection.bias_reporter import run_bias_report
 from Bias_Mitigation.preprocessor_reweighting import load_mitigation_config, reweighing
+from Bias_Mitigation.postprocessor_equalized import extract_positive_scores, compute_global_tpr_fpr
 
 
 def run_pipeline():
@@ -22,16 +23,16 @@ def run_pipeline():
     X_test, y_test = get_data(testing_dataset)
        
 
-    config_dict = load_model_config(r"D:\Coding\Projects\Bias_Auditor A state of the art Fairness Auditor for AI Hiring Systems\Configs\random_forest.yaml")
+    config_dict = load_model_config(r"D:\Coding\Projects\Bias_Auditor A state of the art Fairness Auditor for AI Hiring Systems\Configs\xgboost.yaml")
     model_instance = initialize_model(config_dict)
 
     #Training and Generating Predictions
     trained_model = train_model(model_instance,X_train,y_train, None)
-    y_pred,y_proba = generate_predictions(trained_model,X_test)
+    y_pred,y_proba = generate_predictions(trained_model,X_train)
     #save_model(trained_model,"Random_forest",r"D:\Coding\Projects\Bias_Auditor A state of the art Fairness Auditor for AI Hiring Systems\Models")
 
     #Evaluating Bias Metrices
-    metrices = evaluate_performance(y_test,y_pred)
+    metrices = evaluate_performance(y_train,y_pred)
     print(f"These are the metrices after training : {metrices}")
     standardized_df = load_and_preprocess_data(training_dataset)
     
@@ -48,11 +49,17 @@ def run_pipeline():
     mitigation_config = load_mitigation_config(r"D:\Coding\Projects\Bias_Auditor A state of the art Fairness Auditor for AI Hiring Systems\Configs\mitigation_config.yaml")
     sample_weights = reweighing(sensitive_df, sensitive_columns)
 
-    #Retraining and evaluating the model after Bias Mitigation
+    #Retraining and evaluating the model after Bias Mitigation using preprocessing reweighing
     retrained_model = train_model(model_instance, X_train, y_train, sample_weights)
-    y_pred_r, y_prob_r = generate_predictions(retrained_model, X_test)
-    retrained_metrices = evaluate_performance(y_test, y_pred_r)
+    y_pred_r, y_prob_r = generate_predictions(retrained_model, X_train)
+    retrained_metrices = evaluate_performance(y_train, y_pred_r)
     print(f"These are the metrices after retraining: {retrained_metrices}")
+
+    #Bias Mitigation using post-processor Equalized Odds Mitigation
+    scores = extract_positive_scores(y_proba)
+    compute_global_tpr_fpr(scores, y_train, 0.5)
 
 if __name__ == "__main__":
     run_pipeline()
+
+    

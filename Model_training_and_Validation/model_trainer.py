@@ -27,7 +27,7 @@ def generate_predictions(model, X_test):
         log_status("CRITICAL","This model does not support this command")
     
     if hasattr(model,"predict_proba"):
-        y_proba = model.predict_proba(X_test)
+        y_proba = model.predict_proba(X_test)[:,1]
     else:
         log_status("CRITICAL","This model does not support this command")
 
