@@ -23,17 +23,17 @@ def run_pipeline():
     log_status("INFO","Processing Testing Dataset")
     X_test, y_test = get_data(testing_dataset)
        
-
+    #Loading configuration for training models
     config_dict = load_model_config(r"D:\Coding\Projects\Bias_Auditor A state of the art Fairness Auditor for AI Hiring Systems\Configs\xgboost.yaml")
     model_instance = initialize_model(config_dict)
 
     #Training and Generating Predictions
     trained_model = train_model(model_instance,X_train,y_train, None)
-    y_pred,y_proba = generate_predictions(trained_model,X_train)
+    y_pred,y_proba = generate_predictions(trained_model,X_test)
     #save_model(trained_model,"Random_forest",r"D:\Coding\Projects\Bias_Auditor A state of the art Fairness Auditor for AI Hiring Systems\Models")
 
     #Evaluating Bias Metrices
-    metrices = evaluate_performance(y_train,y_pred)
+    metrices = evaluate_performance(y_test,y_pred)
     print(f"These are the metrices after training : {metrices}")
     standardized_df = load_and_preprocess_data(training_dataset)
     
@@ -52,13 +52,15 @@ def run_pipeline():
 
     #Retraining and evaluating the model after Bias Mitigation using preprocessing reweighing
     retrained_model = train_model(model_instance, X_train, y_train, sample_weights)
-    y_pred_r, y_prob_r = generate_predictions(retrained_model, X_train)
-    retrained_metrices = evaluate_performance(y_train, y_pred_r)
+    y_pred_r, y_prob_r = generate_predictions(retrained_model, X_test)
+    retrained_metrices = evaluate_performance(y_test, y_pred_r)
     print(f"These are the metrices after retraining: {retrained_metrices}")
 
-    #Bias Mitigation using post-processor Equalized Odds Mitigation
-    eo_results = run_equalized_odds_postprocessing(y_train , y_proba , mitigation_config, 0.5, sensitive_df)
+    test_standardized_df = load_and_preprocess_data(testing_dataset)
+    test_sensitive_df = extract_sensitive_columns(test_standardized_df, sensitive_columns)
 
+    #Bias Mitigation using post-processor Equalized Odds Mitigation
+    eo_results = run_equalized_odds_postprocessing(y_test , y_proba , mitigation_config, 0.5, test_sensitive_df)
     print(f"These are the eo results : {eo_results}")
 
 

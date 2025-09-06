@@ -2,8 +2,7 @@ import numpy as np
 import pandas as pd
 import warnings
 
-from Data_Acquisation_and_preprocessing.data_loader import log_status
-from Bias_Detection.bias_metrices import confusion_matrix_by_grp, tpr_fpr_by_grp, compute_all_metrices
+from Bias_Detection.bias_metrices import compute_all_metrices
 from Bias_Mitigation.preprocessor_reweighting import load_mitigation_config
 
 def extract_positive_scores(y_proba):
@@ -22,11 +21,6 @@ def extract_positive_scores(y_proba):
 def compute_global_tpr_fpr(scores, labels, threshold):
     labels = np.asarray(labels).ravel()
     scores = np.asarray(scores).ravel()
-
-    if scores.shape[0] != labels.shape[0]:
-        print("error")
-    else:
-        print("No error")
 
     labels = labels.astype(int)
 
@@ -76,7 +70,6 @@ def compute_equalized_thresholds_for_attribute(scores, labels, group_values, eps
         idx = np.where(groups == g)[0]
         n_g = idx.size
 
-        # Small groups: skip searching (too noisy) and use reference_threshold
         if n_g < min_group_size:
             thresholds[g] = float(reference_threshold)
             continue
@@ -91,9 +84,8 @@ def compute_equalized_thresholds_for_attribute(scores, labels, group_values, eps
         best_violation = float("inf")
         best_acc = -1.0
 
-        # Case: group lacks positives or negatives
         if P_g == 0 or N_g == 0:
-            # Only one of TPR or FPR is meaningful. Minimize the available metric difference.
+        
             for thr in candidates:
                 tpr_g, fpr_g = tpr_fpr_for_arrays(s_g, y_g, thr)
                 if P_g == 0:
@@ -112,7 +104,6 @@ def compute_equalized_thresholds_for_attribute(scores, labels, group_values, eps
             thresholds[g] = best_thr
             continue
 
-        # Normal case: group has both positives and negatives
         for thr in candidates:
             tpr_g, fpr_g = tpr_fpr_for_arrays(s_g, y_g, thr)
             violation = max(abs(tpr_g - TPR_all), abs(fpr_g - FPR_all))
@@ -124,8 +115,6 @@ def compute_equalized_thresholds_for_attribute(scores, labels, group_values, eps
                 best_violation = violation
                 best_thr = float(thr)
                 best_acc = acc
-
-                # early stop if perfect parity achieved
                 if np.isclose(best_violation, 0.0):
                     break
 
@@ -154,9 +143,8 @@ def apply_equalized_odds_for_attribute(scores, thresholds, group_values, default
     else:
         g_arr = np.asarray(group_values).ravel()
 
-    # Basic validation
+    
     if s_arr.ndim != 1:
-        # If user accidentally passed predict_proba matrix, try to handle common case (N,2)
         if s_arr.ndim == 2 and s_arr.shape[1] == 2:
             s_arr = s_arr[:, 1].ravel()
         else:
@@ -165,38 +153,31 @@ def apply_equalized_odds_for_attribute(scores, thresholds, group_values, default
     if s_arr.shape[0] != g_arr.shape[0]:
         raise ValueError(f"`scores` and `group_values` must have same length: {s_arr.shape[0]} vs {g_arr.shape[0]}")
 
-    # Prepare output array
     y_post = np.zeros_like(s_arr, dtype=np.int64)
 
-    # Vectorized per-group application:
-    # We iterate over groups present in the data (should be a small number typically)
     unique_groups = np.unique(g_arr)
 
-    # For convenience, pre-check threshold keys; support keys stored as str variants
-    # Convert thresholds to a mapping that can handle common mismatches (exact match, str match, lower-cased str)
-    thr_map = dict(thresholds)  # shallow copy
-    # If thresholds use str keys, create lowercased index for fallback
+    thr_map = dict(thresholds)  
+    
     lower_map = {str(k).lower(): v for k, v in thr_map.items()}
 
     for g in unique_groups:
         mask = (g_arr == g)
         if not np.any(mask):
-            continue  # nothing to do
+            continue  
 
-        # Find threshold for this group (try multiple fallbacks)
         thr = thr_map.get(g, None)
         if thr is None:
-            # try string conversions as fallback if keys were strings
             try:
                 thr = thr_map.get(str(g), None)
             except Exception:
                 thr = None
         if thr is None:
-            # try case-insensitive match
+            
             thr = lower_map.get(str(g).lower(), None)
 
         if thr is None:
-            # No threshold provided for this group
+            
             warnings.warn(
                 f"No threshold found for group '{g}'. Using default_threshold={default_threshold}. "
                 "Consider adding an explicit threshold for this group.",
@@ -206,16 +187,12 @@ def apply_equalized_odds_for_attribute(scores, thresholds, group_values, default
         else:
             thr = float(thr)
 
-        # Apply threshold to group's scores (vectorized)
         y_post[mask] = (s_arr[mask] >= thr).astype(np.int64)
 
-    # Decide return type
     if return_series is None:
-        # default behavior: return Series if either input was a pandas Series
         return_series = is_scores_series or is_groups_series
 
     if return_series:
-        # Build Series with original index if available, else default RangeIndex
         if orig_index is None:
             orig_index = pd.RangeIndex(start=0, stop=len(y_post))
         return pd.Series(y_post, index=orig_index, name="y_post").astype(int)
@@ -227,7 +204,6 @@ def map_config_sensitive_names_to_df_columns(sensitive_attributes, sensitive_df)
     if not isinstance(sensitive_attributes, (list, tuple)):
         raise ValueError("sensitive_attributes must be a list of names")
 
-    # Build normalized map of df columns -> original column
     df_cols = list(sensitive_df.columns)
     norm_to_col = {}
     for c in df_cols:
@@ -253,10 +229,6 @@ def map_config_sensitive_names_to_df_columns(sensitive_attributes, sensitive_df)
             mapping[cfg_name] = matches[0]
             continue
 
-        raise ValueError(f"Could not map sensitive attribute name '{cfg_name}' from config to any column in sensitive_df; "
-                f"available cols: {df_cols}. Try matching case/spacing or rename df column."
-            )
-    
     return mapping
 
 def run_equalized_odds_postprocessing(y_true, y_proba, mitigation_cfg, reference_threshold, sensitive_df):
@@ -274,6 +246,8 @@ def run_equalized_odds_postprocessing(y_true, y_proba, mitigation_cfg, reference
 
     mapping = map_config_sensitive_names_to_df_columns(sensitive_attributes_cfg, sensitive_df)
 
+    print("\n=== Equalized Odds Postprocessing Results ===")
+
     results = { "config": {"epsilon": epsilon, "min_group_size": min_group_size, "reference_threshold": reference_threshold}, "attributes": {} }
 
     y_before_global = (scores >= reference_threshold).astype(int)
@@ -281,9 +255,8 @@ def run_equalized_odds_postprocessing(y_true, y_proba, mitigation_cfg, reference
     thresholds_by_attribute = {}
 
     for cfg_name, df_col in mapping.items():
+        print(f"\n--- Analysis for {df_col} ---")
         group_values = sensitive_df[df_col].to_numpy()
-
-        
 
         thresholds = compute_equalized_thresholds_for_attribute(scores, y_true, group_values, epsilon, min_group_size, reference_threshold)
 
@@ -298,11 +271,10 @@ def run_equalized_odds_postprocessing(y_true, y_proba, mitigation_cfg, reference
         metrics_after = compute_all_metrices(y_true, y_post_arr, group_df_single)
 
         results["attributes"][df_col] = {
-            "config_name": cfg_name,
-            "thresholds": thresholds,
-            "y_pred_post": y_post,                 
-            "metrics_before": metrics_before,
-            "metrics_after": metrics_after,
+            "Config_name": cfg_name,
+            "Thresholds": thresholds,                 
+            "Metrics_Before": metrics_before,
+            "Metrics_After": metrics_after,
         }
 
         thresholds_by_attribute[df_col] = thresholds
