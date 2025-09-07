@@ -253,32 +253,57 @@ def run_equalized_odds_postprocessing(y_true, y_proba, mitigation_cfg, reference
     y_before_global = (scores >= reference_threshold).astype(int)
 
     thresholds_by_attribute = {}
+    results_data = []
 
     for cfg_name, df_col in mapping.items():
         print(f"\n--- Analysis for {df_col} ---")
         group_values = sensitive_df[df_col].to_numpy()
 
         thresholds = compute_equalized_thresholds_for_attribute(scores, y_true, group_values, epsilon, min_group_size, reference_threshold)
-
         y_post = apply_equalized_odds_for_attribute(scores, thresholds, group_values, reference_threshold, return_series=True)
-
         group_df_single = sensitive_df[[df_col]].copy()
-
         metrics_before = compute_all_metrices(y_true, y_before_global, group_df_single)
-
         y_post_arr = y_post.values if isinstance(y_post, pd.Series) else np.asarray(y_post)
-
         metrics_after = compute_all_metrices(y_true, y_post_arr, group_df_single)
+        
+        for group, threshold in thresholds.items():
+            row_data = {
+        'Attribute': df_col,
+        'Group': group,
+        'Threshold': threshold,
+        'Selection_Rate_Before': metrics_before[df_col].loc['Selection_rate', group],
+        'Selection_Rate_After': metrics_after[df_col].loc['Selection_rate', group],
+        'DP_Diff_before': metrics_before[df_col].loc['Demographic_Parity_Difference', 'Difference'],
+        'DP_Diff_after': metrics_after[df_col].loc['Demographic_Parity_Difference', 'Difference'],
+        'TPR_Before': metrics_before[df_col].loc['True_postive_rate', group],
+        'TPR_After': metrics_after[df_col].loc['True_postive_rate', group],
+        'FPR_Before': metrics_before[df_col].loc['False_postive_rate', group],
+        'FPR_After': metrics_after[df_col].loc['False_postive_rate', group],
+        'TPR_Diff_Before': metrics_before[df_col].loc['True_positive_diff', 'Difference'],
+        'TPR_Diff_After': metrics_after[df_col].loc['True_positive_diff', 'Difference'],
+        'FPR_Diff_Before': metrics_before[df_col].loc['False_positive_diff', 'Difference'],
+        'FPR_Diff_After': metrics_after[df_col].loc['False_positive_diff', 'Difference']
+            }
+            results_data.append(row_data)
 
-        results["attributes"][df_col] = {
-            "Config_name": cfg_name,
-            "Thresholds": thresholds,                 
-            "Metrics_Before": metrics_before,
-            "Metrics_After": metrics_after,
-        }
+    results_df = pd.DataFrame(results_data)
 
-        thresholds_by_attribute[df_col] = thresholds
+    print("\n=== Configuration ===")
+    print(f"Epsilon: {epsilon}")
+    print(f"Min Group Size: {min_group_size}")
+    print(f"Reference Threshold: {reference_threshold}")
+
+    print("\n=== Results ===")
+    # Format float values to 4 decimal places
+    float_cols = results_df.select_dtypes(include=['float64']).columns
+    results_df[float_cols] = results_df[float_cols].round(4)
+
+    pd.set_option('display.max_columns', None)
+    pd.set_option('display.width', None)
+    print(results_df.to_string(index=False))
+
+    thresholds_by_attribute[df_col] = thresholds
 
     results["thresholds_by_attribute"] = thresholds_by_attribute
 
-    return results
+    return results_df

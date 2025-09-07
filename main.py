@@ -8,10 +8,11 @@ from Bias_Detection.bias_metrices import compute_all_metrices
 from Bias_Detection.bias_reporter import run_bias_report
 from Bias_Mitigation.preprocessor_reweighting import load_mitigation_config, reweighing
 from Bias_Mitigation.postprocessor_equalized import extract_positive_scores, compute_global_tpr_fpr, run_equalized_odds_postprocessing
+from Interpretability.shap_interpretability import run_interpretability_pipeline
 
 
 def run_pipeline():
-    training_dataset = r"D:\Coding\Projects\Bias_Auditor A state of the art Fairness Auditor for AI Hiring Systems\Dataset\synthetic_ai_hiring_dataset_v2.csv"
+    training_dataset = r"D:\Coding\Projects\Bias_Auditor A state of the art Fairness Auditor for AI Hiring Systems\Dataset\generated_bias_auditor_dataset.csv"
     testing_dataset = r"D:\Coding\Projects\Bias_Auditor A state of the art Fairness Auditor for AI Hiring Systems\Dataset\test_synthetic_ai_hiring_dataset_v2.csv"
     output_dir = r"D:\Coding\Projects\Bias_Auditor A state of the art Fairness Auditor for AI Hiring Systems\Reports"
     #Loading, preprocessing and spliting training dataset
@@ -24,7 +25,7 @@ def run_pipeline():
     X_test, y_test = get_data(testing_dataset)
        
     #Loading configuration for training models
-    config_dict = load_model_config(r"D:\Coding\Projects\Bias_Auditor A state of the art Fairness Auditor for AI Hiring Systems\Configs\xgboost.yaml")
+    config_dict = load_model_config(r"D:\Coding\Projects\Bias_Auditor A state of the art Fairness Auditor for AI Hiring Systems\Configs\random_forest.yaml")
     model_instance = initialize_model(config_dict)
 
     #Training and Generating Predictions
@@ -61,7 +62,13 @@ def run_pipeline():
 
     #Bias Mitigation using post-processor Equalized Odds Mitigation
     eo_results = run_equalized_odds_postprocessing(y_test , y_proba , mitigation_config, 0.5, test_sensitive_df)
-    print(f"These are the eo results : {eo_results}")
+
+    #SHAP interpretability
+    run_interpretability_pipeline(trained_model, X_test, y_pred, y_proba, test_sensitive_df, top_k=3, threshold=0.5)
+
+    run_interpretability_pipeline(retrained_model, X_test, y_pred_r , y_prob_r, test_sensitive_df, top_k=3, threshold=0.5)
+
+    
 
 
 if __name__ == "__main__":
