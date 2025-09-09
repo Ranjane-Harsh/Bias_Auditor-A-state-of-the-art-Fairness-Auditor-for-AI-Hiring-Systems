@@ -246,7 +246,6 @@ def run_equalized_odds_postprocessing(y_true, y_proba, mitigation_cfg, reference
 
     mapping = map_config_sensitive_names_to_df_columns(sensitive_attributes_cfg, sensitive_df)
 
-    print("\n=== Equalized Odds Postprocessing Results ===")
 
     results = { "config": {"epsilon": epsilon, "min_group_size": min_group_size, "reference_threshold": reference_threshold}, "attributes": {} }
 
@@ -256,7 +255,6 @@ def run_equalized_odds_postprocessing(y_true, y_proba, mitigation_cfg, reference
     results_data = []
 
     for cfg_name, df_col in mapping.items():
-        print(f"\n--- Analysis for {df_col} ---")
         group_values = sensitive_df[df_col].to_numpy()
 
         thresholds = compute_equalized_thresholds_for_attribute(scores, y_true, group_values, epsilon, min_group_size, reference_threshold)
@@ -288,9 +286,8 @@ def run_equalized_odds_postprocessing(y_true, y_proba, mitigation_cfg, reference
 
     results_df = pd.DataFrame(results_data)
 
+    print("\n=== Equalized Odds Postprocessing Results ===")
     print("\n=== Configuration ===")
-    print(f"Epsilon: {epsilon}")
-    print(f"Min Group Size: {min_group_size}")
     print(f"Reference Threshold: {reference_threshold}")
 
     print("\n=== Results ===")

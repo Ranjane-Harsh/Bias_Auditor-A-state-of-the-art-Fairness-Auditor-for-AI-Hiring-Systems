@@ -110,17 +110,12 @@ def bias_summary_for_attribute(y_true_arr, y_pred_arr,col_val_arr):
     return summary_df
 
 def compute_all_metrices(y_true, y_pred, sensitive_df):
-    if len(y_true) == len(y_pred) == len(sensitive_df):
-        log_status("INFO","Shape of all parameters match")
-    else:
-        log_status("ERROR","Shape mismatch error")
 
     summary_dict = {}
     for column in sensitive_df.columns:
         columns_values = sensitive_df[column]
         y_true_arr, y_pred_arr, col_val_arr = normalize_input(y_true,y_pred,columns_values)
 
-        print(f"This is the Metrices Dataframe for : {column}")
         summary_df = bias_summary_for_attribute(y_true_arr,y_pred_arr,col_val_arr)
         summary_dict[column] = summary_df
         print("\n")
